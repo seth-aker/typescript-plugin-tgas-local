@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "es2022",
+    "module": "commonjs",
+    "strict": true,
+    "esModuleInterop": true,
+    "composite": true,
+    "preserveSymlinks": false,
+    "plugins": [
+      {
+        "name": "typescript-plugin-tgas-local"
+      }
+    ]
+  },
+  "files": [
+    "index.ts"
+  ]
+}
