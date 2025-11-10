@@ -40,8 +40,5 @@
     "composite": true,
     "preserveSymlinks": false
   },
-  "include": ["./src"],
-  "references": [
-    { "path": "./sample" }
-  ]
+  "include": ["./src"]
 }

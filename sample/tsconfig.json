@@ -8,11 +8,9 @@
     "preserveSymlinks": false,
     "plugins": [
       {
-        "name": "typescript-plugin-tgas-local"
+        "name": "typescript-plugin-tgas-local",
+        "gasDir": "./gas_files"
       }
     ]
-  },
-  "files": [
-    "index.ts"
-  ]
+  }
 }

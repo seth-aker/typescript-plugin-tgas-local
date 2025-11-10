@@ -9,10 +9,10 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "packageManager": "pnpm@10.17.0",
   "dependencies": {
-    "sample": "link:",
+    "tgas-local": "^1.0.5",
     "typescript": "^5.9.3",
-    "typescript-plugin-tgas-local": "file:.."
+    "typescript-plugin-tgas-local": "file:..",
+    "vitest": "^4.0.8"
   }
 }

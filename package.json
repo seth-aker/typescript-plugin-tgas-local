@@ -1,14 +1,16 @@
 {
   "name": "typescript-plugin-tgas-local",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "main": "lib/index.js",
   "scripts": {
-    "build": "tsc"
+    "clean": "rimraf --glob ./lib",
+    "build": "pnpm run clean && tsc"
   },
   "dependencies": {
     "typescript": "^5.9.3"
   },
   "devDependencies": {
-    "@types/node": "^20.19.24"
+    "@types/node": "^20.19.24",
+    "rimraf": "^6.1.0"
   }
 }

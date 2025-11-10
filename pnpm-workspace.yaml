@@ -1,3 +1,6 @@
 packages:
-  - '.'
-  - 'sample'
+  - .
+  - sample
+
+onlyBuiltDependencies:
+  - esbuild
