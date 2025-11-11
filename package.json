@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "main": "lib/index.js",
   "scripts": {
-    "clean": "rimraf --glob ./lib",
+    "clean": "rimraf --glob ./lib/**/* ./tsconfig.tsbuildinfo",
     "build": "pnpm run clean && tsc"
   },
   "dependencies": {

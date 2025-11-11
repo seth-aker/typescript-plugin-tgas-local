@@ -2,6 +2,7 @@ import path from "node:path"
 import * as ts from "typescript/lib/tsserverlibrary"
 import { generateVirtualDTS } from "./virtualDTS"
 import { getDirFileNames, getNodeAtPostition, isGasGlobalCompletion, ISymbolInfo, populateSymbolMap } from "./utils"
+import { Logger } from "./logger"
 
 const VIRTUAL_FILE_NAME = '__tgas-virtual.d.ts'
 export function createLanguageServicePlugin(): ts.server.PluginModuleFactory {
@@ -9,8 +10,8 @@ export function createLanguageServicePlugin(): ts.server.PluginModuleFactory {
     const {typescript: _ts} = modules
     const plugin: ts.server.PluginModule = {
       create(info) {
-        const logger = (msg: string) => info.project.projectService.logger.info(`[TGAS-LOCAL-PLUGIN] ${msg}`)
-        logger("Plugin initializing!")
+        const logger = new Logger(info.project.projectService.logger)
+        logger.info("Plugin initializing!")
         const { project, languageService, languageServiceHost, config } = info;
         const compilerOptions = languageServiceHost.getCompilationSettings()
         const proxy: ts.LanguageService = Object.create(null);
@@ -21,34 +22,39 @@ export function createLanguageServicePlugin(): ts.server.PluginModuleFactory {
           // @ts-expect-error 
           proxy[key] = (...args: Array<{}>) => x.apply(info.languageService, args)
         }
-        const gasDir = path.join(process.cwd(), config.gasDir)
+        const gasDir = path.join(project.getCurrentDirectory(), config.gasDir)
         const gasFiles = getDirFileNames(gasDir, logger)
+        logger.info(gasFiles.join("\n"))
         const symbolMap = new Map<string, ISymbolInfo>()
-        populateSymbolMap({...compilerOptions, allowJs: true}, gasFiles, symbolMap)
+        populateSymbolMap({...compilerOptions, allowJs: true}, gasFiles, symbolMap, logger)
         const virtualDTSFile = path.resolve(project.getCurrentDirectory(), VIRTUAL_FILE_NAME)
         const virtualFileContents = generateVirtualDTS(symbolMap)
+        logger.info(virtualFileContents)
 
         const scriptSnapshot = ts.ScriptSnapshot.fromString(virtualFileContents)
-        
-        const origGetScriptSnapshot = info.languageServiceHost.getScriptSnapshot.bind(languageServiceHost);
-        const origReadFile = info.languageServiceHost.readFile.bind(languageServiceHost);
+        const origGetScriptSnapshot = languageServiceHost.getScriptSnapshot.bind(languageServiceHost);
+        const origReadFile = languageServiceHost.readFile.bind(languageServiceHost);
 
         languageServiceHost.getScriptSnapshot = (fileName) => {
-          if(fileName === virtualDTSFile) {
+          logger.info(`fileName ${fileName}, virtualFile: ${virtualDTSFile}`)
+          
+          if(fileName.replaceAll('\\', "/") === virtualDTSFile) {
+            logger.info(`getScriptSnapshot: matched fileName: ${fileName} to virtualFileName: ${virtualDTSFile}`)
             return scriptSnapshot
           } else {
             return origGetScriptSnapshot(fileName)
           }
         }
         languageServiceHost.readFile = (fileName) => {
-          if(fileName === virtualDTSFile) {
+          if(fileName.replaceAll('\\', "/") === virtualDTSFile) {
+            logger.info(`readFile: matched fileName: ${fileName} to virtualFileName: ${virtualDTSFile}`)
             return virtualFileContents
           } 
           return origReadFile(fileName)
         }
 
         proxy.getCompletionsAtPosition = (fileName, position, options) => {
-          const prior = info.languageService.getCompletionsAtPosition(fileName, position, options);
+          const prior = languageService.getCompletionsAtPosition(fileName, position, options);
           if (!prior) return;
 
           const program = languageService.getProgram()
@@ -81,7 +87,7 @@ export function createLanguageServicePlugin(): ts.server.PluginModuleFactory {
         proxy.getCompletionEntryDetails = (fileName, position, entryName, formatOptions, source, preferences, data) => {
           const symbolInfo = symbolMap.get(entryName)
           if(!symbolInfo || symbolInfo.name !== entryName) {
-            logger(`getCompletionEntryDetails was not a gas obect, entryName: ${entryName}, source: ${source}, data: ${data}`)
+            logger.info(`getCompletionEntryDetails was not a gas obect, entryName: ${entryName}, source: ${source}, data: ${data}`)
             return languageService.getCompletionEntryDetails(fileName, position, entryName, formatOptions, source, preferences, data)
           } else {
             const quickInfo = languageService.getQuickInfoAtPosition(fileName, position)
