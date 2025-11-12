@@ -31,7 +31,8 @@ declare module 'tgas-local' {
    *
    * @param path The path to the directory of GAS files.
    */
-  function gasRequire(directory: string, globalMocks?: IGlobalMocksObject, options?: IOptions): GasGlobals & IGlobalMocksObject
+  function gasRequire(directory: string, globalMocks?: IGlobalMocksObject, options?: IOptions): GasGlobals
+}
 `
   return fileContent
 }

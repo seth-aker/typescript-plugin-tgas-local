@@ -49,21 +49,21 @@ export function populateSymbolMap(compilerOptions: ts.CompilerOptions, files: st
     if(ts.isFunctionDeclaration(node)
     || ts.isVariableStatement(node)
     || ts.isClassDeclaration(node)) {
-      logger.info(`node kind: ${node.kind.toString()}`)
+      // logger.info(`node kind: ${node.kind.toString()}`)
       const declaration = ts.isVariableStatement(node) ? node.declarationList.declarations[0]: node
       
       if(!declaration?.name) return 
       const symbol = checker.getSymbolAtLocation(declaration.name)
       if(!symbol) return
-      logger.info(`symbol: ${symbol.getName()}`)
+      // logger.info(`symbol: ${symbol.getName()}`)
       const name = symbol.getName()
       const type = checker.getTypeOfSymbolAtLocation(symbol, symbol.valueDeclaration!)
       const typeString = checker.typeToString(type)
-      logger.info(`symbol typestring: ${typeString}`)
+      // logger.info(`symbol typestring: ${typeString}`)
       const documentation = ts.displayPartsToString(symbol.getDocumentationComment(checker))
-      logger.info(`documentation: ${documentation}`)
+      // logger.info(`documentation: ${documentation}`)
       const fileName = node.getSourceFile().fileName;
-      logger.info(`fileName: ${fileName}`)
+      // logger.info(`fileName: ${fileName}`)
       const textSpan = ts.createTextSpan(declaration.getStart(), declaration.getWidth())
       let kind: ts.ScriptElementKind
       if(ts.isFunctionDeclaration(node)) {

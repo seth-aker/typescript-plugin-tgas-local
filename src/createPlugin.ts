@@ -20,37 +20,58 @@ export function createLanguageServicePlugin(): ts.server.PluginModuleFactory {
         for(let key of Object.keys(languageService) as Array<keyof ts.LanguageService>) {
           const x = languageService[key]!
           // @ts-expect-error 
-          proxy[key] = (...args: Array<{}>) => x.apply(info.languageService, args)
+          proxy[key] = (...args: Array<{}>) => x.apply(languageService, args)
         }
+
         const gasDir = path.join(project.getCurrentDirectory(), config.gasDir)
         const gasFiles = getDirFileNames(gasDir, logger)
-        logger.info(gasFiles.join("\n"))
+        logger.info(`GAS file found: ${gasFiles.join("\n")}`)
         const symbolMap = new Map<string, ISymbolInfo>()
         populateSymbolMap({...compilerOptions, allowJs: true}, gasFiles, symbolMap, logger)
-        const virtualDTSFile = path.resolve(project.getCurrentDirectory(), VIRTUAL_FILE_NAME)
-        const virtualFileContents = generateVirtualDTS(symbolMap)
-        logger.info(virtualFileContents)
 
-        const scriptSnapshot = ts.ScriptSnapshot.fromString(virtualFileContents)
+        const virtualDTSFile = ts.server.toNormalizedPath(path.join(project.getCurrentDirectory(), VIRTUAL_FILE_NAME))
+        const virtualFileContents = generateVirtualDTS(symbolMap)
+        const virtualFileSnapshot = ts.ScriptSnapshot.fromString(virtualFileContents)
+        logger.info(virtualFileContents)
+        
+        
         const origGetScriptSnapshot = languageServiceHost.getScriptSnapshot.bind(languageServiceHost);
         const origReadFile = languageServiceHost.readFile.bind(languageServiceHost);
+        const origFileExists = languageServiceHost.fileExists.bind(languageServiceHost)
+        const origGetScriptVersion = languageServiceHost.getScriptVersion.bind(languageServiceHost);
+        const origGetScriptFileNames = languageServiceHost.getScriptFileNames.bind(languageServiceHost)
 
         languageServiceHost.getScriptSnapshot = (fileName) => {
           logger.info(`fileName ${fileName}, virtualFile: ${virtualDTSFile}`)
-          
-          if(fileName.replaceAll('\\', "/") === virtualDTSFile) {
+          if(fileName === virtualDTSFile) {
             logger.info(`getScriptSnapshot: matched fileName: ${fileName} to virtualFileName: ${virtualDTSFile}`)
-            return scriptSnapshot
-          } else {
-            return origGetScriptSnapshot(fileName)
-          }
+            return virtualFileSnapshot
+          } 
+          return origGetScriptSnapshot(fileName)
         }
         languageServiceHost.readFile = (fileName) => {
-          if(fileName.replaceAll('\\', "/") === virtualDTSFile) {
+          logger.info(`read file called: ${fileName}`)
+          if(ts.server.toNormalizedPath(fileName) === virtualDTSFile) {
             logger.info(`readFile: matched fileName: ${fileName} to virtualFileName: ${virtualDTSFile}`)
             return virtualFileContents
           } 
           return origReadFile(fileName)
+        }
+        languageServiceHost.fileExists = (fileName: string) => {
+          logger.info(`File Exists called: ${fileName}`)
+          if(ts.server.toNormalizedPath(fileName) === virtualDTSFile) {
+            logger.info(`fileExists matched, returning true, file: ${ts.server.toNormalizedPath(fileName)}, virtual: ${virtualDTSFile}`)
+            return true
+          } else {
+            return origFileExists(fileName)
+          }
+        }
+        languageServiceHost.getScriptVersion = (fileName) => {
+          logger.info(`Get Script Version called: ${fileName}`)
+          if(fileName === virtualDTSFile) {
+            return '0'
+          }
+          return origGetScriptVersion(fileName)
         }
 
         proxy.getCompletionsAtPosition = (fileName, position, options) => {
@@ -133,7 +154,7 @@ export function createLanguageServicePlugin(): ts.server.PluginModuleFactory {
         return proxy
       },
       getExternalFiles(project: ts.server.Project) {
-        const virtualDTSFile = path.resolve(project.getCurrentDirectory(), VIRTUAL_FILE_NAME)
+        const virtualDTSFile = ts.server.asNormalizedPath(path.resolve(project.getCurrentDirectory(), VIRTUAL_FILE_NAME))
         return [virtualDTSFile]
       }
     }
