@@ -2,6 +2,7 @@
   "compilerOptions": {
     "target": "es2022",
     "module": "commonjs",
+    "rootDir": ".",
     "strict": true,
     "esModuleInterop": true,
     "composite": true,

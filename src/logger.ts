@@ -1,6 +1,6 @@
 import * as ts from 'typescript/lib/tsserverlibrary'
 export class Logger {
-  _tsLogger: ts.server.Logger;
+  private _tsLogger: ts.server.Logger;
   constructor(tsLogger: ts.server.Logger) {
     this._tsLogger = tsLogger
   }

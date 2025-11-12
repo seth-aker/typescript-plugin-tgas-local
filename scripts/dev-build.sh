@@ -5,4 +5,4 @@ pnpm i
 
 cd sample
 
-pnpm i
+pnpm install --config.confirmModulesPurge=false # config.confirmModulesPurge=false turns off the need for confirmation ot install.

@@ -4,4 +4,7 @@ function helloWorld (){
 function gasPredictionFunction() {
   return ""
 }
+function breadCrumb() {
+  return 1
+}
   
