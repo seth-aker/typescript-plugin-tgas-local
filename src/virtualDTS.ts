@@ -188,13 +188,20 @@ declare module 'tgas-local' {
         if(startIndex === -1) {
           throw new Error("Could not find 'IGlobalMocksObject' in file")
         }
-        const endIndex =  globalMocksFile.indexOf("}", startIndex);
+        const endIndex = globalMocksFile.indexOf("}", startIndex);
         if(endIndex === -1) {
           throw new Error("Error: IGlobalMocksObject appears to be malformed")
         }
-        for(const eachString of globalMocksFile.substring(startIndex, endIndex).split(":")) {
+        
+        for(const eachString of globalMocksFile.substring(startIndex, endIndex + 1).split(":")) {
+          this._logger.info(`Each string: ${eachString}`)
+          if(eachString.includes('}')) {
+            break
+          }
           const strings = eachString.split(" ")
+          this._logger.info(`Split string: ${strings.join(", ")}`)
           const key = strings[strings.length - 1]!
+          this._logger.info(`Key: ${key}`)
           if(key?.includes("?")) {
             globalMocksKeys.push(key.substring(0, key.length - 1))
           } else {
