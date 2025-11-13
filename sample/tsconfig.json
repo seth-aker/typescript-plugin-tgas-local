@@ -10,7 +10,7 @@
     "plugins": [
       {
         "name": "typescript-plugin-tgas-local",
-        "gasDir": "./gas_files"
+        "apps_script_dir": "./gas_files"
       }
     ]
   }
