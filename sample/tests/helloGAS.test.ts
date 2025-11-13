@@ -1,7 +1,8 @@
 import {gasRequire} from 'tgas-local'
-import {test} from 'vitest'
+import {test, vi} from 'vitest'
 
 const gLib = gasRequire('../gas_files')
 test('Testing plugin typeing', () => {
-
+  gLib.UrlFetchApp.fetch = vi.fn()
+  
 }) 

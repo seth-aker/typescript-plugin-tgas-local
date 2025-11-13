@@ -1,11 +1,30 @@
 {
   "name": "typescript-plugin-tgas-local",
   "version": "0.0.1",
+  "description": "A typescript plugin to enable typescript autocompletion and typechecking for tgas-local.",
   "main": "lib/index.js",
   "scripts": {
     "clean": "rimraf --glob ./lib/**/* ./tsconfig.tsbuildinfo",
-    "build": "pnpm run clean && tsc"
+    "build": "pnpm run clean && tsc",
+    "prepack": "pnpm run build"
   },
+  "files": [
+    "lib/**/*"
+  ],
+  "keywords": [
+    "Google Apps Scripts",
+    "tgas-local",
+    "typescript",
+    "typescript plugin",
+    "googleappsscript",
+    "gas"
+  ],
+  "author": "Seth Aker <saker132@gmail.com> (https://github.com/seth-aker)",
+  "repository": {
+    "url": "https://github.com/seth-aker/typescript-plugin-tgas-local"
+  },
+  "license": "MIT",
+  "packageManager": "pnpm@10.20.0",
   "dependencies": {
     "tgas-local": "^1.0.6",
     "typescript": "^5.9.3"

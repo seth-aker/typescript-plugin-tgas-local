@@ -183,20 +183,23 @@ declare module 'tgas-local' {
       try {
         const globalMocksFile = fs.readFileSync(path.resolve(projectDir,"node_modules/tgas-local/lib/types/globalMocks.d.ts"), 'utf-8') 
         const globalMocksKeys: string[] = []
-        // get a substring that includes IGlobalMocksObject to the end of the file  
-        // Split the object into pieces based on :
-        for(const eachString of globalMocksFile.substring(globalMocksFile.indexOf("IGlobalMocksObject")).split(":")) {
-          if(eachString.includes("}")) {
-            // We have reached the end of the globalMocksObject
-            break
-          }
+
+        const startIndex = globalMocksFile.indexOf("IGlobalMocksObject")
+        if(startIndex === -1) {
+          throw new Error("Could not find 'IGlobalMocksObject' in file")
+        }
+        const endIndex =  globalMocksFile.indexOf("}", startIndex);
+        if(endIndex === -1) {
+          throw new Error("Error: IGlobalMocksObject appears to be malformed")
+        }
+        for(const eachString of globalMocksFile.substring(startIndex, endIndex).split(":")) {
           const strings = eachString.split(" ")
           const key = strings[strings.length - 1]!
           if(key?.includes("?")) {
             globalMocksKeys.push(key.substring(0, key.length - 1))
-            continue
+          } else {
+            globalMocksKeys.push(key)
           }
-          globalMocksKeys.push(key)
         }
         return globalMocksKeys
       } catch (err) {

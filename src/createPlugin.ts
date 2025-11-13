@@ -23,7 +23,7 @@ export function createLanguageServicePlugin(): ts.server.PluginModuleFactory {
           // @ts-expect-error 
           proxy[key] = (...args: Array<{}>) => x.apply(languageService, args)
         }
-
+        // logger.info(`config: ${JSON.stringify(config)}`)
         const gasDir = path.join(project.getCurrentDirectory(), config.apps_script_directory)
         const virtualDTSFilePath = ts.server.toNormalizedPath(path.join(project.getCurrentDirectory(), VIRTUAL_FILE_NAME))
         const virtualFileManager = new VirtualDTSFileManager(compilerOptions, gasDir, virtualDTSFilePath, project.getCurrentDirectory(), logger)
