@@ -3,7 +3,6 @@ import fs from 'node:fs'
 import * as ts from "typescript/lib/tsserverlibrary"
 import { VirtualDTSFileManager } from "./virtualDTS"
 import { Logger } from "./logger"
-import { getNodeAtPostition, isGasGlobalCompletion } from "./utils"
 
 const VIRTUAL_FILE_NAME = '__tgas-virtual.d.ts'
 const DEBOUNCE_MS = 500
@@ -27,7 +26,7 @@ export function createLanguageServicePlugin(): ts.server.PluginModuleFactory {
 
         const gasDir = path.join(project.getCurrentDirectory(), config.apps_script_directory)
         const virtualDTSFilePath = ts.server.toNormalizedPath(path.join(project.getCurrentDirectory(), VIRTUAL_FILE_NAME))
-        const virtualFileManager = new VirtualDTSFileManager(compilerOptions, gasDir, virtualDTSFilePath, logger)
+        const virtualFileManager = new VirtualDTSFileManager(compilerOptions, gasDir, virtualDTSFilePath, project.getCurrentDirectory(), logger)
         
         const origGetScriptSnapshot = languageServiceHost.getScriptSnapshot.bind(languageServiceHost);
         const origReadFile = languageServiceHost.readFile.bind(languageServiceHost);
@@ -97,83 +96,6 @@ export function createLanguageServicePlugin(): ts.server.PluginModuleFactory {
         } catch (err: any) {
           logger.info(`Failed to start file watcher on ${gasDir}: ${err.message}`);
         }
-
-        proxy.getCompletionsAtPosition = (fileName, position, options) => {
-          const prior = languageService.getCompletionsAtPosition(fileName, position, options);
-          if (!prior) return;
-
-          const program = languageService.getProgram()
-          if(!program) return prior
-
-          const checker = program.getTypeChecker()
-          const sourceFile = program.getSourceFile(fileName)
-
-          if(!sourceFile) return prior
-
-          const node = getNodeAtPostition(sourceFile, position)
-
-          if(!node) return prior
-
-          
-          if(isGasGlobalCompletion(node, checker)) {
-            prior.entries = prior.entries.map(entry => {
-              if(virtualFileManager.getSymbolMap().has(entry.name)) {
-                return {
-                  ...entry,
-                  source: "GAS Globals",
-                }
-              }
-              return entry
-            })
-          }
-          return prior
-        }
-
-        // proxy.getCompletionEntryDetails = (fileName, position, entryName, formatOptions, source, preferences, data) => {
-        //   const symbolInfo = symbolMap.get(entryName)
-        //   if(!symbolInfo || symbolInfo.name !== entryName) {
-        //     logger.info(`getCompletionEntryDetails was not a gas obect, entryName: ${entryName}, source: ${source}, data: ${data}`)
-        //     return languageService.getCompletionEntryDetails(fileName, position, entryName, formatOptions, source, preferences, data)
-        //   } else {
-        //     const quickInfo = languageService.getQuickInfoAtPosition(fileName, position)
-        //     return {
-        //       name: symbolInfo.name,
-        //       kind: symbolInfo.kind,
-        //       kindModifiers: ts.ScriptElementKindModifier.none,
-        //       documentation: quickInfo?.documentation,
-        //       displayParts: quickInfo?.displayParts
-        //     } as ts.CompletionEntryDetails
-        //   }
-        // }
-
-        // proxy.getQuickInfoAtPosition = (fileName, position, maximumLength) => {
-        //   const prior = languageService.getQuickInfoAtPosition(fileName, position, maximumLength)
-        //   if(!prior) return
-
-        //   const program = languageService.getProgram()
-        //   if(!program) return prior
-
-        //   const checker = program.getTypeChecker();
-        //   const sourceFile = program.getSourceFile(fileName)
-        //   if(!sourceFile) return prior
-        //   const node = getNodeAtPostition(sourceFile, prior.textSpan.start)
-        //   if(!node) return prior
-        //   const symbol = checker.getSymbolAtLocation(node)
-        //   if(symbol && symbolMap.has(symbol.name)) {
-        //     const symbolInfo = symbolMap.get(symbol.name)
-        //     return {
-        //       kind: prior.kind,
-        //       kindModifiers: prior.kindModifiers,
-        //       textSpan: prior.textSpan,
-        //       displayParts: prior.displayParts,
-        //       documentation: [
-        //         {text: symbolInfo?.documentation, kind: "text"}
-        //       ],
-        //       tags: prior.tags
-        //     } as ts.QuickInfo
-        //   }
-        //   return prior
-        // }
 
         return proxy
       },

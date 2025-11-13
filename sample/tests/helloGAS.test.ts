@@ -1,7 +1,7 @@
 import {gasRequire} from 'tgas-local'
-import {test, vi } from 'vitest'
+import {test} from 'vitest'
 
 const gLib = gasRequire('../gas_files')
 test('Testing plugin typeing', () => {
-  gLib.HELLO_WORLD
+
 }) 

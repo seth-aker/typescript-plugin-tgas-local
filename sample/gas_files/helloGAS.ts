@@ -5,6 +5,6 @@ function gasPredictionFunction() {
   return ""
 }
 function breadCrumb() {
+  UrlFetchApp.fetch('hello')
   return 1
 }
-  
