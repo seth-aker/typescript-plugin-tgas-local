@@ -32,7 +32,6 @@ export class VirtualDTSFileManager {
     this._symbolMap = new Map<string, ISymbolInfo>()
     this._virtualDTSFilePath = virtualDTSFilePath
     this._GLOBAL_MOCKS_KEYS = this.getGlobalMocksKeys(projectDir)
-    this._logger.info(`GlobalMocksKeys: ${this._GLOBAL_MOCKS_KEYS.join("\n")}`)
     this.updateFile()
   }
   updateFile() {
@@ -76,19 +75,15 @@ export class VirtualDTSFileManager {
       const fileName = path.resolve(sourceFile.fileName)
       if(files.includes(fileName)) {
         this._logger.info(`Reading sourceFile: ${sourceFile.fileName}`)
-        ts.forEachChild(sourceFile, (node) => this._visit(node, this._checker))
+        ts.forEachChild(sourceFile, (node) => this.visit(node, this._checker))
       }
     }
   }
   private generateVirtualFileContents() {
-    const indentJSDoc = (doc: string): string => {
-      if(!doc) return ""
-      const lines = doc.split("\n")
-      return lines.map(line => `  ${line}`).join('\n')
-    }
+    
     const props: string[] = []
     this._symbolMap.forEach((symbolInfo) => {
-      props.push(indentJSDoc(symbolInfo.documentation))
+      props.push(symbolInfo.documentation)
       props.push(`  ${symbolInfo.name}: ${symbolInfo.typeString}`)
     })
     const fileContent = `
@@ -105,22 +100,22 @@ declare module 'tgas-local' {
   interface GasGlobals {
   ${props.join("\n")}
   }
-  type IGasRequire = GasGlobals & Required<Pick<IGlobalMocksObject, "${Array.from(this._usedMocksKeys).join(" | ")}">>
+  type IGasRequireReturn = GasGlobals & Required<Pick<IGlobalMocksObject, "${Array.from(this._usedMocksKeys).join('" | "')}">>
   /**
    * Overrides the default 'gasRequire' function signature.
    * Instead of returning 'any', it now returns the strongly-typed
-   * 'GasGlobals' interface, enabling full autocompletion and type-checking.
+   * 'IGasRequireReturn' interface, enabling full autocompletion and type-checking.
    *
    * @param path The path to the directory of GAS files.
    */
-  function gasRequire(directory: string, globalMocks?: IGlobalMocksObject, options?: IGasOptions): IGasRequire
+  function gasRequire(directory: string, globalMocks?: IGlobalMocksObject, options?: IGasOptions): IGasRequireReturn
 }
 `
     this._logger.info(`Generated virtual file content: \n${fileContent}`)
     return fileContent
   }
 
-  private _visit(node: ts.Node, checker: ts.TypeChecker) {
+  private visit(node: ts.Node, checker: ts.TypeChecker) {
       if(ts.isFunctionDeclaration(node)
       || ts.isVariableStatement(node)
       || ts.isClassDeclaration(node)) {
@@ -136,7 +131,7 @@ declare module 'tgas-local' {
         const type = checker.getTypeOfSymbolAtLocation(symbol, symbol.valueDeclaration!)
         const typeString = checker.typeToString(type)
         
-        const documentation = ts.displayPartsToString(symbol.getDocumentationComment(checker))
+        const documentation = this.generateJsDocString(symbol)
         const fileName = node.getSourceFile().fileName;
         
         const textSpan = ts.createTextSpan(declaration.getStart(), declaration.getWidth())
@@ -158,6 +153,25 @@ declare module 'tgas-local' {
           this._usedMocksKeys.add(key)
         }
       })
+    }
+    private generateJsDocString(symbol: ts.Symbol) {
+      const tags = symbol.getJsDocTags(this._checker)
+      const content = symbol.getDocumentationComment(this._checker)
+      if(tags.length < 1 && content.length < 1) return ""
+
+      let jsDocString = '\/**\n'
+      if(content.length > 0) {
+        jsDocString += ` * ${ts.displayPartsToString(content)} \n`
+      }
+      for(const tag of tags) {
+        let tagString = ` * @${tag.name} `;
+        if(tag.text) {
+          tagString += ts.displayPartsToString(tag.text)
+        }
+        jsDocString += `${tagString}\n`
+      }
+      jsDocString += ' *\/'
+      return jsDocString
     }
     private getDirFileNames(dir: string): string[] {
       try {
@@ -192,16 +206,13 @@ declare module 'tgas-local' {
         if(endIndex === -1) {
           throw new Error("Error: IGlobalMocksObject appears to be malformed")
         }
-        
+
         for(const eachString of globalMocksFile.substring(startIndex, endIndex + 1).split(":")) {
-          this._logger.info(`Each string: ${eachString}`)
           if(eachString.includes('}')) {
             break
           }
           const strings = eachString.split(" ")
-          this._logger.info(`Split string: ${strings.join(", ")}`)
           const key = strings[strings.length - 1]!
-          this._logger.info(`Key: ${key}`)
           if(key?.includes("?")) {
             globalMocksKeys.push(key.substring(0, key.length - 1))
           } else {
