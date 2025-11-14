@@ -21,5 +21,5 @@ A typescript language server plugin to improve the experience for developing Goo
 Essentially, the plugin searches your files for the `gasRequire()` function from tgas-local package. Once it finds that, it generates a type file (.d.ts) based on the top level declarations inside of your GAS files. It then applies those types as the return object of `gasRequire()`
 
 ## Links
-[tgas-local]("https://github.com/seth-aker/tgas-local"): Run and test GAS code locally with typescript.
+[tgas-local](https://github.com/seth-aker/tgas-local): Run and test GAS code locally with typescript.
 
