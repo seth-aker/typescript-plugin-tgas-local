@@ -2,9 +2,11 @@
 A typescript language server plugin to improve the experience for developing Google Apps Scripts (GAS) locally with typescript. This plugin hooks into the typescript languageServiceHost and injects a virtual type declaration file based on the source directory of your GAS files.
 
 ## Installation
-1. Install the plugin and dependancies: `pnpm install -D typescript-plugin-tgas-local @types/google-apps-script typescript`
-
-2. Add the following fields to your tsconfig.json
+1. Install the plugin and dependancies:
+```
+pnpm install -D typescript-plugin-tgas-local @types/google-apps-script typescript`
+```
+3. Add the following fields to your tsconfig.json
 ```json
 {
   // ...rest of your compilerOptions
