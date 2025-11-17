@@ -4,7 +4,7 @@ A typescript language server plugin to improve the experience for developing Goo
 ## Installation
 1. Install the plugin and dependancies:
 ```
-pnpm install -D typescript-plugin-tgas-local @types/google-apps-script typescript`
+pnpm install -D typescript-plugin-tgas-local @types/google-apps-script typescript
 ```
 3. Add the following fields to your tsconfig.json
 ```json
