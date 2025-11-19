@@ -18,9 +18,7 @@ pnpm install -D typescript-plugin-tgas-local @types/google-apps-script typescrip
   ]
 }
 ```
-3. **Important!** If using VSCode
-
-Set your workspace settings to point to the locally installed version of typescript. In this file: `project_root/.vscode/settings.json`
+3. **Important!** If using VSCode, set your workspace settings to use the locally installed version of typescript. In this file: `project_root/.vscode/settings.json`
 ```json
 {
   "typescript.tsdk": "node_modules\\typescript\\lib"
