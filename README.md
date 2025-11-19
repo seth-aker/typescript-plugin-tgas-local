@@ -6,7 +6,7 @@ A typescript language server plugin to improve the experience for developing Goo
 ```
 pnpm install -D typescript-plugin-tgas-local @types/google-apps-script typescript
 ```
-3. Add the following fields to your tsconfig.json
+2. Add the following fields to your tsconfig.json
 ```json
 {
   // ...rest of your compilerOptions
@@ -18,7 +18,13 @@ pnpm install -D typescript-plugin-tgas-local @types/google-apps-script typescrip
   ]
 }
 ```
-
+3. **Important!** If using VSCode
+Set your workspace settings to point to the locally installed version of typescript. In this file: `project_root/.vscode/settings.json`
+```json
+{
+  "typescript.tsdk": "node_modules\\typescript\\lib"
+}
+```
 ## How it works
 Essentially, the plugin searches your files for the `gasRequire()` function from tgas-local package. Once it finds that, it generates a type file (.d.ts) based on the top level declarations inside of your GAS files. It then applies those types as the return object of `gasRequire()`
 
